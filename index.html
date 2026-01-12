@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation Price Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px 20px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #333333;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .calculator-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .calculator-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .options-panel {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+
+        .result-panel {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: #333333;
+            margin-bottom: 15px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 500;
+        }
+
+        .option-group {
+            margin-bottom: 20px;
+        }
+
+        .option-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333333;
+            font-size: 0.95rem;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .event-option-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .event-option-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .event-option-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .option-card {
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: #ffffff;
+        }
+
+        .option-card:hover {
+            border-color: #666666;
+            background-color: #f9f9f9;
+        }
+
+        .option-card.selected {
+            border-color: #333333;
+            background-color: #f0f0f0;
+            font-weight: 500;
+        }
+
+        .option-name {
+            color: #333333;
+            font-size: 0.85rem;
+        }
+
+        .slider-container {
+            padding: 0 10px;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-weight: 500;
+            margin-top: 6px;
+            color: #333333;
+            font-size: 0.95rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #333333;
+            cursor: pointer;
+            border: 1px solid #cccccc;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333333;
+            font-size: 0.95rem;
+        }
+
+        .text-input, .date-input, .select-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            background-color: #ffffff;
+        }
+
+        .text-input:focus, .date-input:focus, .select-input:focus {
+            outline: none;
+            border-color: #666666;
+        }
+
+        /* Envelope customization row */
+        .envelope-customization {
+            display: grid;
+            grid-template-columns: auto 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .custom-checkbox input {
+            margin: 0;
+        }
+
+        /* Add-ons Styles */
+        .addon-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .addon-item {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            height: 100%;
+        }
+
+        .addon-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .addon-checkbox {
+            margin-right: 10px;
+            margin-top: 2px;
+        }
+
+        .addon-name {
+            font-weight: 500;
+            color: #333333;
+            font-size: 0.9rem;
+        }
+
+        .addon-option {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #666666;
+        }
+
+        .addon-input {
+            width: 80px;
+            padding: 4px 6px;
+            border: 1px solid #cccccc;
+            border-radius: 3px;
+            margin-left: 8px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .addon-input:disabled {
+            background-color: #f0f0f0;
+            color: #999999;
+            cursor: not-allowed;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .action-button {
+            background-color: #f0f0f0;
+            color: #333333;
+            border: 1px solid #cccccc;
+            padding: 8px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 500;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .action-button:hover {
+            background-color: #e5e5e5;
+            border-color: #999999;
+        }
+
+        .reset-button {
+            background-color: #f0f0f0;
+        }
+
+        .copy-button {
+            background-color: #333333;
+            color: white;
+            border: 1px solid #333333;
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            height: 44px;
+            font-size: 0.9rem;
+        }
+
+        .copy-button:hover {
+            background-color: #444444;
+        }
+
+        .summary-container {
+            flex-grow: 1;
+        }
+
+        .summary-title {
+            font-size: 1.1rem;
+            color: #333333;
+            margin-bottom: 15px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 500;
+        }
+
+        .event-type-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #333333;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .event-date-line {
+            color: #666666;
+            font-size: 0.95rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .price-per-set {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: #333333;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .summary-details {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+
+        .summary-line {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .summary-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .final-total {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #333333;
+            font-weight: 600;
+            font-size: 1.3rem;
+            text-align: center;
+            color: #333333;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+            color: #666666;
+            font-size: 0.8rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333333;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .price-per-set {
+                font-size: 1.8rem;
+            }
+            
+            .event-option-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .envelope-customization {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .addon-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Invitation Price Calculator</h1>
+        </header>
+
+        <div class="calculator-wrapper">
+            <div class="options-panel">
+                <h2 class="section-title">Customization Options</h2>
+                
+                <div class="option-group">
+                    <label class="option-label">1. Event Type</label>
+                    <div class="event-option-grid" id="event-type-options">
+                        <div class="option-card selected" data-value="wedding" data-price="0">
+                            <div class="option-name">Wedding</div>
+                        </div>
+                        <div class="option-card" data-value="debut" data-price="0">
+                            <div class="option-name">Debut</div>
+                        </div>
+                        <div class="option-card" data-value="birthday" data-price="0">
+                            <div class="option-name">Birthday</div>
+                        </div>
+                        <div class="option-card" data-value="baptism" data-price="0">
+                            <div class="option-name">Baptism</div>
+                        </div>
+                        <div class="option-card" data-value="special-event" data-price="0">
+                            <div class="option-name">Special event</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">2. Size</label>
+                    <div class="option-grid" id="size-options">
+                        <div class="option-card selected" data-value="4r" data-price="0">
+                            <div class="option-name">4R</div>
+                        </div>
+                        <div class="option-card" data-value="5r" data-price="10">
+                            <div class="option-name">5R</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">3. Envelope Type</label>
+                    <div class="option-grid" id="envelope-options">
+                        <div class="option-card" data-value="no-envelope" data-price="-5">
+                            <div class="option-name">No envelope</div>
+                        </div>
+                        <div class="option-card selected" data-value="plain-white" data-price="0">
+                            <div class="option-name">Plain white</div>
+                        </div>
+                        <div class="option-card" data-value="colored" data-price="15">
+                            <div class="option-name">Colored</div>
+                        </div>
+                        <div class="option-card" data-value="transparent" data-price="15">
+                            <div class="option-name">Transparent</div>
+                        </div>
+                        <div class="option-card" data-value="premium-colored" data-price="20">
+                            <div class="option-name">Premium colored</div>
+                        </div>
+                        <div class="option-card" data-value="vellum-cover" data-price="20">
+                            <div class="option-name">Vellum cover</div>
+                        </div>
+                        <div class="option-card" data-value="gatefold" data-price="40">
+                            <div class="option-name">Gatefold</div>
+                        </div>
+                        <div class="option-card" data-value="pocket-cover" data-price="25">
+                            <div class="option-name">Pocket Cover</div>
+                        </div>
+                        <div class="option-card" data-value="pouch-cover" data-price="55">
+                            <div class="option-name">Pouch Cover</div>
+                        </div>
+                        <div class="option-card" data-value="trifold" data-price="45">
+                            <div class="option-name">Trifold</div>
+                        </div>
+                        <div class="option-card" data-value="vellum-cover-print" data-price="30">
+                            <div class="option-name">Vellum cover with print</div>
+                        </div>
+                        <div class="option-card" data-value="portrait-colored" data-price="35">
+                            <div class="option-name">Portrait colored</div>
+                        </div>
+                        <div class="option-card" data-value="premium-portrait-colored" data-price="45">
+                            <div class="option-name">Premium portrait colored</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Envelope customization row -->
+                    <div class="envelope-customization">
+                        <div class="custom-checkbox">
+                            <input type="checkbox" id="custom-color-checkbox">
+                            <label for="custom-color-checkbox">Custom Color</label>
+                        </div>
+                        
+                        <select class="select-input" id="envelope-color-select" disabled>
+                            <option value="">Select Color</option>
+                            <option value="red">Red</option>
+                            <option value="blue">Blue</option>
+                            <option value="green">Green</option>
+                            <option value="purple">Purple</option>
+                            <option value="pink">Pink</option>
+                            <option value="gold">Gold</option>
+                            <option value="silver">Silver</option>
+                            <option value="navy">Navy</option>
+                            <option value="burgundy">Burgundy</option>
+                            <option value="teal">Teal</option>
+                            <option value="ivory">Ivory</option>
+                        </select>
+                        
+                        <select class="select-input" id="envelope-finish-select" disabled>
+                            <option value="">Select Finish</option>
+                            <option value="matte">Matte</option>
+                            <option value="glossy">Glossy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">4. Number of Inserts</label>
+                    <div class="slider-container">
+                        <input type="range" id="inserts-slider" min="0" max="10" value="0" step="1">
+                        <div class="slider-value" id="inserts-value">0 inserts</div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">5. Paper Type</label>
+                    <div class="option-grid" id="paper-options">
+                        <div class="option-card selected" data-value="matte" data-price="0">
+                            <div class="option-name">Matte</div>
+                        </div>
+                        <div class="option-card" data-value="glossy" data-price="0">
+                            <div class="option-name">Glossy</div>
+                        </div>
+                        <div class="option-card" data-value="premium-matte" data-price="5">
+                            <div class="option-name">Premium matte</div>
+                        </div>
+                        <div class="option-card" data-value="matte-textured" data-price="5">
+                            <div class="option-name">Matte textured</div>
+                        </div>
+                        <div class="option-card" data-value="glossy-textured" data-price="5">
+                            <div class="option-name">Glossy textured</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">6. Envelope Seal</label>
+                    <div class="option-grid" id="seal-options">
+                        <div class="option-card selected" data-value="no-seal" data-price="0">
+                            <div class="option-name">No seal</div>
+                        </div>
+                        <div class="option-card" data-value="sticker-seal" data-price="0">
+                            <div class="option-name">Sticker seal</div>
+                        </div>
+                        <div class="option-card" data-value="wax-seal" data-price="5">
+                            <div class="option-name">Wax seal</div>
+                        </div>
+                        <div class="option-card" data-value="belt" data-price="5">
+                            <div class="option-name">Belt</div>
+                        </div>
+                        <div class="option-card" data-value="wax-seal-string" data-price="10">
+                            <div class="option-name">Wax seal with string</div>
+                        </div>
+                        <div class="option-card" data-value="belt-print" data-price="10">
+                            <div class="option-name">Belt with print</div>
+                        </div>
+                        <div class="option-card" data-value="frosted-belt" data-price="10">
+                            <div class="option-name">Frosted belt</div>
+                        </div>
+                        <div class="option-card" data-value="ribbon" data-price="10">
+                            <div class="option-name">Ribbon</div>
+                        </div>
+                        <div class="option-card" data-value="wax-seal-flower" data-price="15">
+                            <div class="option-name">Wax seal with flower</div>
+                        </div>
+                        <div class="option-card" data-value="frosted-belt-print" data-price="15">
+                            <div class="option-name">Frosted belt with print</div>
+                        </div>
+                        <div class="option-card" data-value="frayed-ribbon" data-price="15">
+                            <div class="option-name">Frayed ribbon</div>
+                        </div>
+                        <div class="option-card" data-value="wax-seal-string-flower" data-price="20">
+                            <div class="option-name">Wax seal with string and flower</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">7. Add-ons</label>
+                    <div class="addon-grid" id="addon-options">
+                        <!-- Liner -->
+                        <div class="addon-item">
+                            <div class="addon-header">
+                                <input type="checkbox" class="addon-checkbox" id="addon-liner" data-price="20">
+                                <div class="addon-name">Liner</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Gold Foil -->
+                        <div class="addon-item">
+                            <div class="addon-header">
+                                <input type="checkbox" class="addon-checkbox" id="addon-gold-foil" data-price="15" data-per-page="true">
+                                <div class="addon-name">Gold foil</div>
+                            </div>
+                            <div class="addon-option">
+                                <span>No. of pages:</span>
+                                <input type="number" class="addon-input" id="gold-foil-pages" min="1" max="10" value="1" disabled>
+                            </div>
+                        </div>
+                        
+                        <!-- Gold Foil Full Page -->
+                        <div class="addon-item">
+                            <div class="addon-header">
+                                <input type="checkbox" class="addon-checkbox" id="addon-gold-foil-full" data-price="20" data-per-page="true">
+                                <div class="addon-name">Gold foil full page</div>
+                            </div>
+                            <div class="addon-option">
+                                <span>No. of pages:</span>
+                                <input type="number" class="addon-input" id="gold-foil-full-pages" min="1" max="10" value="1" disabled>
+                            </div>
+                        </div>
+                        
+                        <!-- Arc Cut -->
+                        <div class="addon-item">
+                            <div class="addon-header">
+                                <input type="checkbox" class="addon-checkbox" id="addon-arc-cut" data-price="5" data-per-page="true">
+                                <div class="addon-name">Arc cut</div>
+                            </div>
+                            <div class="addon-option">
+                                <span>No. of pages:</span>
+                                <input type="number" class="addon-input" id="arc-cut-pages" min="1" max="10" value="1" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label class="input-label">Number of Sets</label>
+                        <input type="number" class="text-input" id="sets-input" min="1" max="1000" value="20">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Event Date</label>
+                        <input type="date" class="date-input" id="event-date-input">
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button class="action-button reset-button" id="reset-button">
+                        <i class="fas fa-redo-alt"></i> Reset All
+                    </button>
+                    <button class="action-button" id="print-button">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+
+            <div class="result-panel">
+                <div class="summary-container">
+                    <h2 class="summary-title">Quotation Summary</h2>
+                    
+                    <div class="event-type-title" id="event-type-title">Wedding invitation</div>
+                    <div class="event-date-line" id="event-date-display">Event Date: Not specified</div>
+                    
+                    <div class="price-per-set" id="price-per-set">₱35 each</div>
+                    
+                    <div class="summary-details">
+                        <div class="summary-line" id="summary-size-line">4R size</div>
+                        <div class="summary-line" id="summary-envelope-line">Plain white Envelope</div>
+                        <div class="summary-line" id="summary-inserts-line">0 inserts</div>
+                        <div class="summary-line" id="summary-paper-line">Matte paper</div>
+                        <div class="summary-line" id="summary-seal-line">No seal</div>
+                        <div class="summary-line" id="addon-summary"></div>
+                    </div>
+                    
+                    <div class="final-total" id="final-total">
+                        20 sets x ₱35 each = ₱700
+                    </div>
+                    
+                    <button class="copy-button" id="copy-button">
+                        <i class="fas fa-copy"></i> Copy Quotation Summary
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Invitation Price Calculator &copy; <span id="current-year">2023</span> | All prices are per invitation set in Philippine Peso</p>
+            <p>Note: Additional charges may apply for rush orders, special printing techniques, or custom artwork.</p>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification">Quotation copied to clipboard!</div>
+
+    <script>
+        // Base price for the invitation set
+        const BASE_PRICE = 35;
+        // Price per additional insert
+        const INSERT_PRICE = 5;
+        
+        // Current selections
+        let currentSelections = {
+            eventType: { value: "wedding", price: 0, name: "Wedding" },
+            size: { value: "4r", price: 0, name: "4R" },
+            envelope: { value: "plain-white", price: 0, name: "Plain white" },
+            envelopeCustom: { selected: false, color: "", finish: "" },
+            inserts: { value: 0, price: 0 },
+            paper: { value: "matte", price: 0, name: "Matte" },
+            seal: { value: "no-seal", price: 0, name: "No seal" },
+            addons: {
+                liner: { selected: false, price: 20, pages: 1 },
+                goldFoil: { selected: false, price: 15, pages: 1, perPage: true },
+                goldFoilFull: { selected: false, price: 20, pages: 1, perPage: true },
+                arcCut: { selected: false, price: 5, pages: 1, perPage: true }
+            }
+        };
+        
+        // Number of sets
+        let numberOfSets = 20;
+        // Event date
+        let eventDate = "";
+        
+        // Initialize the calculator
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            
+            // Set default event date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
+            document.getElementById('event-date-input').value = tomorrowFormatted;
+            eventDate = tomorrowFormatted;
+            updateEventDateDisplay();
+            
+            // Set up event listeners for option cards
+            setupOptionCards('event-type-options', 'eventType', true);
+            setupOptionCards('size-options', 'size');
+            setupOptionCards('envelope-options', 'envelope');
+            setupOptionCards('paper-options', 'paper');
+            setupOptionCards('seal-options', 'seal');
+            
+            // Set up envelope customization
+            setupEnvelopeCustomization();
+            
+            // Set up slider for inserts
+            const insertsSlider = document.getElementById('inserts-slider');
+            const insertsValue = document.getElementById('inserts-value');
+            
+            insertsSlider.addEventListener('input', function() {
+                const insertCount = parseInt(this.value);
+                const insertPrice = insertCount * INSERT_PRICE;
+                
+                // Update display
+                insertsValue.textContent = `${insertCount} insert${insertCount !== 1 ? 's' : ''}`;
+                
+                // Update current selections
+                currentSelections.inserts.value = insertCount;
+                currentSelections.inserts.price = insertPrice;
+                
+                // Update summary
+                updateSummary();
+            });
+            
+            // Set up sets input
+            const setsInput = document.getElementById('sets-input');
+            setsInput.addEventListener('input', function() {
+                numberOfSets = parseInt(this.value) || 1;
+                updateSummary();
+            });
+            
+            // Set up event date input
+            const eventDateInput = document.getElementById('event-date-input');
+            eventDateInput.addEventListener('change', function() {
+                eventDate = this.value;
+                updateEventDateDisplay();
+            });
+            
+            // Set up add-on checkboxes
+            setupAddonCheckboxes();
+            
+            // Set up reset button
+            document.getElementById('reset-button').addEventListener('click', resetSelections);
+            
+            // Set up print button
+            document.getElementById('print-button').addEventListener('click', printQuote);
+            
+            // Set up copy button
+            document.getElementById('copy-button').addEventListener('click', copyQuotation);
+            
+            // Initial calculation
+            updateSummary();
+        });
+        
+        // Function to set up option card selections
+        function setupOptionCards(containerId, selectionType, isEventType = false) {
+            const container = document.getElementById(containerId);
+            const optionCards = container.querySelectorAll('.option-card');
+            
+            optionCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove selected class from all cards in this group
+                    optionCards.forEach(c => c.classList.remove('selected'));
+                    
+                    // Add selected class to clicked card
+                    this.classList.add('selected');
+                    
+                    // Get the value and price from data attributes
+                    const value = this.getAttribute('data-value');
+                    const price = parseInt(this.getAttribute('data-price'));
+                    const name = this.querySelector('.option-name').textContent;
+                    
+                    // Update current selections
+                    currentSelections[selectionType] = {
+                        value: value,
+                        price: price,
+                        name: name
+                    };
+                    
+                    // Update event type title if needed
+                    if (isEventType) {
+                        updateEventTypeTitle();
+                    }
+                    
+                    // Update summary
+                    updateSummary();
+                });
+            });
+        }
+        
+        // Function to set up envelope customization
+        function setupEnvelopeCustomization() {
+            const customCheckbox = document.getElementById('custom-color-checkbox');
+            const colorSelect = document.getElementById('envelope-color-select');
+            const finishSelect = document.getElementById('envelope-finish-select');
+            
+            customCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                currentSelections.envelopeCustom.selected = isChecked;
+                colorSelect.disabled = !isChecked;
+                finishSelect.disabled = !isChecked;
+                
+                if (!isChecked) {
+                    colorSelect.value = "";
+                    finishSelect.value = "";
+                    currentSelections.envelopeCustom.color = "";
+                    currentSelections.envelopeCustom.finish = "";
+                }
+                
+                updateSummary();
+            });
+            
+            colorSelect.addEventListener('change', function() {
+                currentSelections.envelopeCustom.color = this.value;
+                updateSummary();
+            });
+            
+            finishSelect.addEventListener('change', function() {
+                currentSelections.envelopeCustom.finish = this.value;
+                updateSummary();
+            });
+        }
+        
+        // Function to set up add-on checkboxes
+        function setupAddonCheckboxes() {
+            // Liner
+            const linerCheckbox = document.getElementById('addon-liner');
+            linerCheckbox.addEventListener('change', function() {
+                currentSelections.addons.liner.selected = this.checked;
+                updateSummary();
+            });
+            
+            // Gold Foil
+            const goldFoilCheckbox = document.getElementById('addon-gold-foil');
+            const goldFoilPages = document.getElementById('gold-foil-pages');
+            
+            goldFoilCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                currentSelections.addons.goldFoil.selected = isChecked;
+                goldFoilPages.disabled = !isChecked;
+                updateSummary();
+            });
+            
+            goldFoilPages.addEventListener('input', function() {
+                const pages = parseInt(this.value) || 1;
+                currentSelections.addons.goldFoil.pages = Math.max(1, Math.min(10, pages));
+                updateSummary();
+            });
+            
+            // Gold Foil Full Page
+            const goldFoilFullCheckbox = document.getElementById('addon-gold-foil-full');
+            const goldFoilFullPages = document.getElementById('gold-foil-full-pages');
+            
+            goldFoilFullCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                currentSelections.addons.goldFoilFull.selected = isChecked;
+                goldFoilFullPages.disabled = !isChecked;
+                updateSummary();
+            });
+            
+            goldFoilFullPages.addEventListener('input', function() {
+                const pages = parseInt(this.value) || 1;
+                currentSelections.addons.goldFoilFull.pages = Math.max(1, Math.min(10, pages));
+                updateSummary();
+            });
+            
+            // Arc Cut
+            const arcCutCheckbox = document.getElementById('addon-arc-cut');
+            const arcCutPages = document.getElementById('arc-cut-pages');
+            
+            arcCutCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                currentSelections.addons.arcCut.selected = isChecked;
+                arcCutPages.disabled = !isChecked;
+                updateSummary();
+            });
+            
+            arcCutPages.addEventListener('input', function() {
+                const pages = parseInt(this.value) || 1;
+                currentSelections.addons.arcCut.pages = Math.max(1, Math.min(10, pages));
+                updateSummary();
+            });
+        }
+        
+        // Function to update event type title
+        function updateEventTypeTitle() {
+            const eventType = currentSelections.eventType.name;
+            const title = eventType === "Special event" ? "Special event invitation" : `${eventType} invitation`;
+            document.getElementById('event-type-title').textContent = title;
+        }
+        
+        // Function to update event date display
+        function updateEventDateDisplay() {
+            if (eventDate) {
+                const dateObj = new Date(eventDate);
+                const formattedDate = dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('event-date-display').textContent = `Event Date: ${formattedDate}`;
+            } else {
+                document.getElementById('event-date-display').textContent = `Event Date: Not specified`;
+            }
+        }
+        
+        // Function to update summary
+        function updateSummary() {
+            // Calculate total price per set
+            const sizePrice = currentSelections.size.price;
+            const envelopePrice = currentSelections.envelope.price;
+            const insertsPrice = currentSelections.inserts.price;
+            const paperPrice = currentSelections.paper.price;
+            const sealPrice = currentSelections.seal.price;
+            
+            // Calculate add-on prices
+            let addonPrice = 0;
+            let addonSummaryLines = [];
+            
+            if (currentSelections.addons.liner.selected) {
+                addonPrice += currentSelections.addons.liner.price;
+                addonSummaryLines.push("Liner");
+            }
+            
+            if (currentSelections.addons.goldFoil.selected) {
+                const goldFoilPrice = currentSelections.addons.goldFoil.price * currentSelections.addons.goldFoil.pages;
+                addonPrice += goldFoilPrice;
+                addonSummaryLines.push(`Gold foil (${currentSelections.addons.goldFoil.pages} page${currentSelections.addons.goldFoil.pages > 1 ? 's' : ''})`);
+            }
+            
+            if (currentSelections.addons.goldFoilFull.selected) {
+                const goldFoilFullPrice = currentSelections.addons.goldFoilFull.price * currentSelections.addons.goldFoilFull.pages;
+                addonPrice += goldFoilFullPrice;
+                addonSummaryLines.push(`Gold foil full page (${currentSelections.addons.goldFoilFull.pages} page${currentSelections.addons.goldFoilFull.pages > 1 ? 's' : ''})`);
+            }
+            
+            if (currentSelections.addons.arcCut.selected) {
+                const arcCutPrice = currentSelections.addons.arcCut.price * currentSelections.addons.arcCut.pages;
+                addonPrice += arcCutPrice;
+                addonSummaryLines.push(`Arc cut (${currentSelections.addons.arcCut.pages} page${currentSelections.addons.arcCut.pages > 1 ? 's' : ''})`);
+            }
+            
+            const totalPerSet = BASE_PRICE + sizePrice + envelopePrice + insertsPrice + paperPrice + sealPrice + addonPrice;
+            const finalTotal = totalPerSet * numberOfSets;
+            
+            // Update price per set display
+            document.getElementById('price-per-set').textContent = `₱${totalPerSet} each`;
+            
+            // Update summary lines
+            document.getElementById('summary-size-line').textContent = 
+                `${currentSelections.size.name} size`;
+            
+            // Update envelope line with custom color if selected - FORMAT: color, finish, envelope type
+            let envelopeLine = currentSelections.envelope.name;
+            if (currentSelections.envelopeCustom.selected && 
+                currentSelections.envelopeCustom.color && 
+                currentSelections.envelopeCustom.finish) {
+                
+                // Capitalize first letter of color
+                const color = currentSelections.envelopeCustom.color.charAt(0).toUpperCase() + 
+                             currentSelections.envelopeCustom.color.slice(1);
+                const finish = currentSelections.envelopeCustom.finish;
+                
+                // Format: color, finish, envelope type
+                envelopeLine = `${color}, ${finish}, ${envelopeLine}`;
+            }
+            document.getElementById('summary-envelope-line').textContent = envelopeLine + " Envelope";
+            
+            document.getElementById('summary-inserts-line').textContent = 
+                `${currentSelections.inserts.value} insert${currentSelections.inserts.value !== 1 ? 's' : ''}`;
+            
+            document.getElementById('summary-paper-line').textContent = 
+                `${currentSelections.paper.name} paper`;
+            
+            document.getElementById('summary-seal-line').textContent = 
+                currentSelections.seal.name;
+            
+            // Update add-on summary
+            const addonSummaryElement = document.getElementById('addon-summary');
+            if (addonSummaryLines.length > 0) {
+                let addonHtml = '';
+                addonSummaryLines.forEach(line => {
+                    addonHtml += `<div class="summary-line">${line}</div>`;
+                });
+                addonSummaryElement.innerHTML = addonHtml;
+            } else {
+                addonSummaryElement.innerHTML = '';
+            }
+            
+            // Update final total
+            document.getElementById('final-total').innerHTML = 
+                `${numberOfSets} sets x ₱${totalPerSet} each = ₱${finalTotal}`;
+        }
+        
+        // Function to reset all selections to defaults
+        function resetSelections() {
+            // Reset event type selection
+            const eventTypeCards = document.querySelectorAll('#event-type-options .option-card');
+            eventTypeCards.forEach(card => card.classList.remove('selected'));
+            eventTypeCards[0].classList.add('selected');
+            currentSelections.eventType = { value: "wedding", price: 0, name: "Wedding" };
+            updateEventTypeTitle();
+            
+            // Reset size selection
+            const sizeCards = document.querySelectorAll('#size-options .option-card');
+            sizeCards.forEach(card => card.classList.remove('selected'));
+            sizeCards[0].classList.add('selected');
+            currentSelections.size = { value: "4r", price: 0, name: "4R" };
+            
+            // Reset envelope selection
+            const envelopeCards = document.querySelectorAll('#envelope-options .option-card');
+            envelopeCards.forEach(card => card.classList.remove('selected'));
+            envelopeCards[1].classList.add('selected'); // Plain white is second option
+            currentSelections.envelope = { value: "plain-white", price: 0, name: "Plain white" };
+            
+            // Reset envelope customization
+            currentSelections.envelopeCustom = { selected: false, color: "", finish: "" };
+            document.getElementById('custom-color-checkbox').checked = false;
+            document.getElementById('envelope-color-select').value = "";
+            document.getElementById('envelope-color-select').disabled = true;
+            document.getElementById('envelope-finish-select').value = "";
+            document.getElementById('envelope-finish-select').disabled = true;
+            
+            // Reset inserts slider
+            document.getElementById('inserts-slider').value = 0;
+            document.getElementById('inserts-value').textContent = '0 inserts';
+            currentSelections.inserts = { value: 0, price: 0 };
+            
+            // Reset paper selection
+            const paperCards = document.querySelectorAll('#paper-options .option-card');
+            paperCards.forEach(card => card.classList.remove('selected'));
+            paperCards[0].classList.add('selected');
+            currentSelections.paper = { value: "matte", price: 0, name: "Matte" };
+            
+            // Reset seal selection
+            const sealCards = document.querySelectorAll('#seal-options .option-card');
+            sealCards.forEach(card => card.classList.remove('selected'));
+            sealCards[0].classList.add('selected');
+            currentSelections.seal = { value: "no-seal", price: 0, name: "No seal" };
+            
+            // Reset add-ons
+            currentSelections.addons = {
+                liner: { selected: false, price: 20, pages: 1 },
+                goldFoil: { selected: false, price: 15, pages: 1, perPage: true },
+                goldFoilFull: { selected: false, price: 20, pages: 1, perPage: true },
+                arcCut: { selected: false, price: 5, pages: 1, perPage: true }
+            };
+            
+            // Reset add-on checkboxes and inputs
+            document.getElementById('addon-liner').checked = false;
+            document.getElementById('addon-gold-foil').checked = false;
+            document.getElementById('gold-foil-pages').value = 1;
+            document.getElementById('gold-foil-pages').disabled = true;
+            document.getElementById('addon-gold-foil-full').checked = false;
+            document.getElementById('gold-foil-full-pages').value = 1;
+            document.getElementById('gold-foil-full-pages').disabled = true;
+            document.getElementById('addon-arc-cut').checked = false;
+            document.getElementById('arc-cut-pages').value = 1;
+            document.getElementById('arc-cut-pages').disabled = true;
+            
+            // Reset sets input
+            document.getElementById('sets-input').value = 20;
+            numberOfSets = 20;
+            
+            // Reset event date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
+            document.getElementById('event-date-input').value = tomorrowFormatted;
+            eventDate = tomorrowFormatted;
+            updateEventDateDisplay();
+            
+            // Update summary
+            updateSummary();
+            
+            // Show confirmation
+            alert("All selections have been reset to default values.");
+        }
+        
+        // Function to copy quotation to clipboard
+        function copyQuotation() {
+            // Calculate total price per set
+            const sizePrice = currentSelections.size.price;
+            const envelopePrice = currentSelections.envelope.price;
+            const insertsPrice = currentSelections.inserts.price;
+            const paperPrice = currentSelections.paper.price;
+            const sealPrice = currentSelections.seal.price;
+            
+            // Calculate add-on prices and summary lines
+            let addonPrice = 0;
+            let addonSummaryLines = [];
+            
+            if (currentSelections.addons.liner.selected) {
+                addonPrice += currentSelections.addons.liner.price;
+                addonSummaryLines.push("Liner");
+            }
+            
+            if (currentSelections.addons.goldFoil.selected) {
+                const goldFoilPrice = currentSelections.addons.goldFoil.price * currentSelections.addons.goldFoil.pages;
+                addonPrice += goldFoilPrice;
+                addonSummaryLines.push(`Gold foil (${currentSelections.addons.goldFoil.pages} page${currentSelections.addons.goldFoil.pages > 1 ? 's' : ''})`);
+            }
+            
+            if (currentSelections.addons.goldFoilFull.selected) {
+                const goldFoilFullPrice = currentSelections.addons.goldFoilFull.price * currentSelections.addons.goldFoilFull.pages;
+                addonPrice += goldFoilFullPrice;
+                addonSummaryLines.push(`Gold foil full page (${currentSelections.addons.goldFoilFull.pages} page${currentSelections.addons.goldFoilFull.pages > 1 ? 's' : ''})`);
+            }
+            
+            if (currentSelections.addons.arcCut.selected) {
+                const arcCutPrice = currentSelections.addons.arcCut.price * currentSelections.addons.arcCut.pages;
+                addonPrice += arcCutPrice;
+                addonSummaryLines.push(`Arc cut (${currentSelections.addons.arcCut.pages} page${currentSelections.addons.arcCut.pages > 1 ? 's' : ''})`);
+            }
+            
+            const totalPerSet = BASE_PRICE + sizePrice + envelopePrice + insertsPrice + paperPrice + sealPrice + addonPrice;
+            const finalTotal = totalPerSet * numberOfSets;
+            
+            // Format event type title
+            const eventType = currentSelections.eventType.name;
+            const eventTitle = eventType === "Special event" ? "Special event invitation" : `${eventType} invitation`;
+            
+            // Format event date
+            let formattedEventDate = "Not specified";
+            if (eventDate) {
+                const dateObj = new Date(eventDate);
+                formattedEventDate = dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            
+            // Format envelope line with custom color if selected - FORMAT: color, finish, envelope type
+            let envelopeLine = currentSelections.envelope.name;
+            if (currentSelections.envelopeCustom.selected && 
+                currentSelections.envelopeCustom.color && 
+                currentSelections.envelopeCustom.finish) {
+                
+                // Capitalize first letter of color
+                const color = currentSelections.envelopeCustom.color.charAt(0).toUpperCase() + 
+                             currentSelections.envelopeCustom.color.slice(1);
+                const finish = currentSelections.envelopeCustom.finish;
+                
+                // Format: color, finish, envelope type
+                envelopeLine = `${color}, ${finish}, ${envelopeLine}`;
+            }
+            
+            // Create quotation text in the requested format
+            let quotationText = `${eventTitle}
+Event Date: ${formattedEventDate}
+
+₱${totalPerSet} each
+
+${currentSelections.size.name} size
+${envelopeLine} Envelope
+${currentSelections.inserts.value} insert${currentSelections.inserts.value !== 1 ? 's' : ''}
+${currentSelections.paper.name} paper
+${currentSelections.seal.name}`;
+
+            // Add add-ons to quotation if any
+            if (addonSummaryLines.length > 0) {
+                quotationText += "\n";
+                addonSummaryLines.forEach(line => {
+                    quotationText += `${line}\n`;
+                });
+            }
+
+            quotationText += `
+${numberOfSets} sets x ₱${totalPerSet} each = ₱${finalTotal}`;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(quotationText)
+                .then(() => {
+                    // Show notification
+                    const notification = document.getElementById('notification');
+                    notification.classList.add('show');
+                    
+                    // Hide notification after 3 seconds
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                    }, 3000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy quotation to clipboard. Please try again.');
+                });
+        }
+        
+        // Function to print a quote
+        function printQuote() {
+            // Calculate total price per set
+            const sizePrice = currentSelections.size.price;
+            const envelopePrice = currentSelections.envelope.price;
+            const insertsPrice = currentSelections.inserts.price;
+            const paperPrice = currentSelections.paper.price;
+            const sealPrice = currentSelections.seal.price;
+            
+            // Calculate add-on prices and summary lines
+            let addonPrice = 0;
+            let addonSummaryLines = [];
+            
+            if (currentSelections.addons.liner.selected) {
+                addonPrice += currentSelections.addons.liner.price;
+                addonSummaryLines.push("Liner");
+            }
+            
+            if (currentSelections.addons.goldFoil.selected) {
+                const goldFoilPrice = currentSelections.addons.goldFoil.price * currentSelections.addons.goldFoil.pages;
+                addonPrice += goldFoilPrice;
+                addonSummaryLines.push(`Gold foil (${currentSelections.addons.goldFoil.pages} page${currentSelections.addons.goldFoil.pages > 1 ? 's' : ''})`);
+            }
+            
+            if (currentSelections.addons.goldFoilFull.selected) {
+                const goldFoilFullPrice = currentSelections.addons.goldFoilFull.price * currentSelections.addons.goldFoilFull.pages;
+                addonPrice += goldFoilFullPrice;
+                addonSummaryLines.push(`Gold foil full page (${currentSelections.addons.goldFoilFull.pages} page${currentSelections.addons.goldFoilFull.pages > 1 ? 's' : ''})`);
+            }
+            
+            if (currentSelections.addons.arcCut.selected) {
+                const arcCutPrice = currentSelections.addons.arcCut.price * currentSelections.addons.arcCut.pages;
+                addonPrice += arcCutPrice;
+                addonSummaryLines.push(`Arc cut (${currentSelections.addons.arcCut.pages} page${currentSelections.addons.arcCut.pages > 1 ? 's' : ''})`);
+            }
+            
+            const totalPerSet = BASE_PRICE + sizePrice + envelopePrice + insertsPrice + paperPrice + sealPrice + addonPrice;
+            const finalTotal = totalPerSet * numberOfSets;
+            
+            // Format event type title
+            const eventType = currentSelections.eventType.name;
+            const eventTitle = eventType === "Special event" ? "Special event invitation" : `${eventType} invitation`;
+            
+            // Format event date
+            let formattedEventDate = "Not specified";
+            if (eventDate) {
+                const dateObj = new Date(eventDate);
+                formattedEventDate = dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            
+            // Format envelope line with custom color if selected - FORMAT: color, finish, envelope type
+            let envelopeLine = currentSelections.envelope.name;
+            if (currentSelections.envelopeCustom.selected && 
+                currentSelections.envelopeCustom.color && 
+                currentSelections.envelopeCustom.finish) {
+                
+                // Capitalize first letter of color
+                const color = currentSelections.envelopeCustom.color.charAt(0).toUpperCase() + 
+                             currentSelections.envelopeCustom.color.slice(1);
+                const finish = currentSelections.envelopeCustom.finish;
+                
+                // Format: color, finish, envelope type
+                envelopeLine = `${color}, ${finish}, ${envelopeLine}`;
+            }
+            
+            // Create add-ons HTML
+            let addonsHtml = '';
+            if (addonSummaryLines.length > 0) {
+                addonSummaryLines.forEach(line => {
+                    addonsHtml += `<div class="summary-line">${line}</div>`;
+                });
+            }
+            
+            // Create a printable version
+            const printContent = `
+                <html>
+                <head>
+                    <title>Invitation Quotation</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #333333; margin-bottom: 25px; }
+                        .event-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+                        .event-date { color: #666666; font-size: 14px; margin-bottom: 25px; }
+                        .price-per-set { font-size: 24px; font-weight: bold; margin: 20px 0; }
+                        .summary-details { margin: 20px 0; padding: 15px; background-color: #f9f9f9; }
+                        .summary-line { margin-bottom: 10px; font-size: 14px; }
+                        .final-total { font-size: 20px; font-weight: bold; margin-top: 25px; padding-top: 15px; border-top: 2px solid #333; }
+                        .footer { margin-top: 30px; font-size: 11px; color: #777; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Invitation Quotation</h1>
+                    
+                    <div class="event-title">${eventTitle}</div>
+                    <div class="event-date">Event Date: ${formattedEventDate}</div>
+                    
+                    <div class="price-per-set">₱${totalPerSet} each</div>
+                    
+                    <div class="summary-details">
+                        <div class="summary-line">${currentSelections.size.name} size</div>
+                        <div class="summary-line">${envelopeLine} Envelope</div>
+                        <div class="summary-line">${currentSelections.inserts.value} insert${currentSelections.inserts.value !== 1 ? 's' : ''}</div>
+                        <div class="summary-line">${currentSelections.paper.name} paper</div>
+                        <div class="summary-line">${currentSelections.seal.name}</div>
+                        ${addonsHtml}
+                    </div>
+                    
+                    <div class="final-total">
+                        ${numberOfSets} sets x ₱${totalPerSet} each = ₱${finalTotal}
+                    </div>
+                    
+                    <div class="footer">
+                        <p>This quotation is valid for 30 days. Additional charges may apply for rush orders, special printing techniques, or custom artwork.</p>
+                        <p>Generated on ${new Date().toLocaleDateString()}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Open print window
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            // Wait for content to load, then print
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+    </script>
+</body>
+</html>
