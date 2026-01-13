@@ -58,8 +58,10 @@
         .price-per-set { font-size: 2.2rem; font-weight: 300; color: #333333; margin-bottom: 20px; text-align: center; line-height: 1; }
         .summary-details { margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 4px; }
         .summary-line { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4; }
-        .final-total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #333333; font-weight: 600; font-size: 1.3rem; text-align: center; color: #333333; }
         .addons-summary { margin-top: 10px; }
+        .sets-total { margin-top: 20px; padding-top: 15px; border-top: 1px solid #cccccc; font-weight: 600; font-size: 1.1rem; text-align: center; color: #333333; }
+        .one-time-fees { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cccccc; }
+        .final-total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #333333; font-weight: 600; font-size: 1.3rem; text-align: center; color: #333333; }
         footer { text-align: center; margin-top: 25px; padding-top: 12px; border-top: 1px solid #e0e0e0; color: #666666; font-size: 0.8rem; }
         .notification { position: fixed; top: 20px; right: 20px; background-color: #333333; color: white; padding: 10px 16px; border-radius: 4px; font-size: 0.85rem; opacity: 0; transform: translateY(-10px); transition: opacity 0.3s, transform 0.3s; z-index: 1000; }
         .notification.show { opacity: 1; transform: translateY(0); }
@@ -181,10 +183,10 @@
                         <div class="summary-line" id="summary-paper-line">Matte paper</div>
                         <div class="summary-line" id="summary-seal-line">No seal</div>
                         <div class="addons-summary" id="addons-summary"></div>
-                        <div class="summary-line" id="layout-summary"></div>
-                        <div class="summary-line" id="rush-summary"></div>
+                        <div class="sets-total" id="sets-total">20 sets x ₱25 each = ₱500</div>
+                        <div class="one-time-fees" id="one-time-fees"></div>
                     </div>
-                    <div class="final-total" id="final-total">20 sets x ₱25 each = ₱500</div>
+                    <div class="final-total" id="final-total">Total: ₱500</div>
                     <button class="copy-button" id="copy-button"><i class="fas fa-copy"></i> Copy Quotation Summary</button>
                 </div>
             </div>
@@ -238,6 +240,17 @@
             { id: 'calendar-foil', name: 'Calendar foil', price: 25, unit: 'flat' },
             { id: 'folded-insert', name: 'Folded insert', price: 5, unit: 'flat' },
             { id: 'trifold-insert', name: 'Trifold insert', price: 10, unit: 'flat' }
+        ];
+        
+        // List of flat add-ons that should be included in price per set (excluding Map layout)
+        const flatAddonsInPricePerSet = [
+            'vellum-jacket',
+            'vellum-jacket-print',
+            'different-sized-insert',
+            'ribbon-addon',
+            'calendar-foil',
+            'folded-insert',
+            'trifold-insert'
         ];
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -401,13 +414,8 @@
                 
                 if (addon.unit === 'flat') {
                     addonTotal = addon.price;
-                    // Special format for Map layout
-                    if (addonId === 'map-layout') {
-                        summaryHTML += `<div class="summary-line">Map layout: ₱${addon.price}</div>`;
-                    } else {
-                        // For other flat add-ons, just show name
-                        summaryHTML += `<div class="summary-line">${addon.name}</div>`;
-                    }
+                    // Show all flat add-ons in the main summary (they will be moved to one-time fees if needed)
+                    summaryHTML += `<div class="summary-line">${addon.name}</div>`;
                 } else if (addon.unit === 'page' || addon.unit === 'piece') {
                     addonTotal = addon.price * addon.quantity * numberOfSets;
                     // Format: "X page(s)/item(s) Addon Name" with correct grammar
@@ -431,7 +439,7 @@
             const sealPrice = currentSelections.seal.price;
             
             // Calculate add-ons total
-            const addonsTotal = calculateAddonsTotal();
+            calculateAddonsTotal();
             
             // Calculate layout fee based on number of inserts (pages)
             const numberOfPages = currentSelections.inserts.value + 1; // Base invitation + inserts
@@ -475,11 +483,24 @@
                 }
             }
             
-            // Calculate price per set (excluding Map layout and other flat add-ons that are one-time fees)
+            // Calculate price per set (including flat add-ons except Map layout)
             let addonPricePerSet = 0;
             Object.keys(currentSelections.addons).forEach(addonId => {
                 const addon = currentSelections.addons[addonId];
-                if (addonId !== 'map-layout' && addon.unit !== 'flat') {
+                
+                if (addonId === 'map-layout') {
+                    // Map layout is NOT included in price per set (it's a one-time fee)
+                    return;
+                }
+                
+                if (addon.unit === 'flat') {
+                    // Check if this flat add-on should be included in price per set
+                    if (flatAddonsInPricePerSet.includes(addonId)) {
+                        // These flat add-ons are included in price per set
+                        addonPricePerSet += addon.price;
+                    }
+                    // Note: flat add-ons NOT in the list are treated as one-time fees
+                } else {
                     // For per-page/per-piece add-ons, add their price to price per set
                     addonPricePerSet += addon.price * addon.quantity;
                 }
@@ -487,17 +508,45 @@
             
             const totalPerSet = BASE_PRICE + sizePrice + envelopePrice + insertsPrice + paperPrice + sealPrice + addonPricePerSet;
             
-            // Calculate final total including flat add-ons, layout fee, and rush fee
-            let flatAddonsTotal = 0;
+            // Calculate sets total (price for all sets)
+            const setsTotal = totalPerSet * numberOfSets;
+            
+            // Calculate one-time fees (Map layout, layout fee, rush fee, and flat add-ons NOT in price per set)
+            let oneTimeFeesTotal = 0;
+            let oneTimeFeesHTML = "";
+            
             Object.keys(currentSelections.addons).forEach(addonId => {
                 const addon = currentSelections.addons[addonId];
-                if (addon.unit === 'flat' || addonId === 'map-layout') {
-                    flatAddonsTotal += addon.price;
+                
+                if (addonId === 'map-layout') {
+                    // Map layout is always a one-time fee
+                    oneTimeFeesTotal += addon.price;
+                    oneTimeFeesHTML += `<div class="summary-line">Map layout: ₱${addon.price}</div>`;
+                } else if (addon.unit === 'flat' && !flatAddonsInPricePerSet.includes(addonId)) {
+                    // Flat add-ons NOT in the price-per-set list are one-time fees
+                    oneTimeFeesTotal += addon.price;
+                    oneTimeFeesHTML += `<div class="summary-line">${addon.name}: ₱${addon.price}</div>`;
                 }
             });
             
-            const finalTotal = (totalPerSet * numberOfSets) + layoutFee + rushFee + flatAddonsTotal;
+            // Add layout fee to one-time fees if applicable
+            if (layoutSummary && layoutSummary !== "FREE layout" && layoutSummary !== "Own layout") {
+                oneTimeFeesTotal += layoutFee;
+                oneTimeFeesHTML += `<div class="summary-line">${layoutSummary}</div>`;
+            } else if (layoutSummary === "FREE layout" || layoutSummary === "Own layout") {
+                // These don't have a fee, but we might want to show them in the summary
+                // For now, we'll leave them out of the one-time fees section
+            }
             
+            // Add rush fee to one-time fees if applicable
+            if (rushSummary) {
+                oneTimeFeesTotal += rushFee;
+                oneTimeFeesHTML += `<div class="summary-line">${rushSummary}</div>`;
+            }
+            
+            const finalTotal = setsTotal + oneTimeFeesTotal;
+            
+            // Update display
             document.getElementById('price-per-set').textContent = `₱${totalPerSet} each`;
             document.getElementById('summary-size-line').textContent = `${currentSelections.size.name} size`;
             document.getElementById('summary-envelope-line').textContent = `${currentSelections.envelope.name} Envelope`;
@@ -505,10 +554,18 @@
             document.getElementById('summary-paper-line').textContent = `${currentSelections.paper.name} paper`;
             document.getElementById('summary-seal-line').textContent = currentSelections.seal.name;
             
-            document.getElementById('layout-summary').textContent = layoutSummary;
-            document.getElementById('rush-summary').textContent = rushSummary;
+            document.getElementById('sets-total').innerHTML = `${numberOfSets} sets x ₱${totalPerSet} each = ₱${setsTotal}`;
             
-            document.getElementById('final-total').innerHTML = `${numberOfSets} sets x ₱${totalPerSet} each = ₱${finalTotal}`;
+            // Update one-time fees section
+            if (oneTimeFeesHTML) {
+                document.getElementById('one-time-fees').innerHTML = oneTimeFeesHTML;
+                document.getElementById('one-time-fees').style.display = 'block';
+            } else {
+                document.getElementById('one-time-fees').innerHTML = '';
+                document.getElementById('one-time-fees').style.display = 'none';
+            }
+            
+            document.getElementById('final-total').innerHTML = `Total: ₱${finalTotal}`;
         }
         
         function resetSelections() {
@@ -582,30 +639,19 @@
             
             // Calculate add-ons total and summary
             let addonsSummary = "";
-            let addonsTotal = 0;
             
             Object.keys(currentSelections.addons).forEach(addonId => {
                 const addon = currentSelections.addons[addonId];
-                let addonTotal = 0;
                 
                 if (addon.unit === 'flat') {
-                    addonTotal = addon.price;
-                    // Special format for Map layout
-                    if (addonId === 'map-layout') {
-                        addonsSummary += `Map layout: ₱${addon.price}\n`;
-                    } else {
-                        // For other flat add-ons, just show name
-                        addonsSummary += `${addon.name}\n`;
-                    }
+                    // Show all flat add-ons in the main summary
+                    addonsSummary += `${addon.name}\n`;
                 } else if (addon.unit === 'page' || addon.unit === 'piece') {
-                    addonTotal = addon.price * addon.quantity * numberOfSets;
                     // Format: "X page(s)/item(s) Addon Name" with correct grammar
                     const unitText = addon.unit === 'page' ? (addon.quantity === 1 ? 'page' : 'pages') : 
                                     (addon.quantity === 1 ? 'item' : 'items');
                     addonsSummary += `${addon.quantity} ${unitText} ${addon.name}\n`;
                 }
-                
-                addonsTotal += addonTotal;
             });
             
             // Calculate layout fee based on number of inserts (pages)
@@ -648,11 +694,23 @@
                 }
             }
             
-            // Calculate price per set (excluding Map layout and other flat add-ons)
+            // Calculate price per set (including flat add-ons except Map layout)
             let addonPricePerSet = 0;
             Object.keys(currentSelections.addons).forEach(addonId => {
                 const addon = currentSelections.addons[addonId];
-                if (addonId !== 'map-layout' && addon.unit !== 'flat') {
+                
+                if (addonId === 'map-layout') {
+                    // Map layout is NOT included in price per set (it's a one-time fee)
+                    return;
+                }
+                
+                if (addon.unit === 'flat') {
+                    // Check if this flat add-on should be included in price per set
+                    if (flatAddonsInPricePerSet.includes(addonId)) {
+                        // These flat add-ons are included in price per set
+                        addonPricePerSet += addon.price;
+                    }
+                } else {
                     // For per-page/per-piece add-ons, add their price to price per set
                     addonPricePerSet += addon.price * addon.quantity;
                 }
@@ -660,16 +718,40 @@
             
             const totalPerSet = BASE_PRICE + sizePrice + envelopePrice + insertsPrice + paperPrice + sealPrice + addonPricePerSet;
             
-            // Calculate final total including flat add-ons, layout fee, and rush fee
-            let flatAddonsTotal = 0;
+            // Calculate sets total (price for all sets)
+            const setsTotal = totalPerSet * numberOfSets;
+            
+            // Calculate one-time fees (Map layout, layout fee, rush fee, and flat add-ons NOT in price per set)
+            let oneTimeFeesTotal = 0;
+            let oneTimeFeesText = "";
+            
             Object.keys(currentSelections.addons).forEach(addonId => {
                 const addon = currentSelections.addons[addonId];
-                if (addon.unit === 'flat' || addonId === 'map-layout') {
-                    flatAddonsTotal += addon.price;
+                
+                if (addonId === 'map-layout') {
+                    // Map layout is always a one-time fee
+                    oneTimeFeesTotal += addon.price;
+                    oneTimeFeesText += `Map layout: ₱${addon.price}\n`;
+                } else if (addon.unit === 'flat' && !flatAddonsInPricePerSet.includes(addonId)) {
+                    // Flat add-ons NOT in the price-per-set list are one-time fees
+                    oneTimeFeesTotal += addon.price;
+                    oneTimeFeesText += `${addon.name}: ₱${addon.price}\n`;
                 }
             });
             
-            const finalTotal = (totalPerSet * numberOfSets) + layoutFee + rushFee + flatAddonsTotal;
+            // Add layout fee to one-time fees if applicable
+            if (layoutSummary && layoutSummary !== "FREE layout" && layoutSummary !== "Own layout") {
+                oneTimeFeesTotal += layoutFee;
+                oneTimeFeesText += `${layoutSummary}\n`;
+            }
+            
+            // Add rush fee to one-time fees if applicable
+            if (rushSummary) {
+                oneTimeFeesTotal += rushFee;
+                oneTimeFeesText += `${rushSummary}\n`;
+            }
+            
+            const finalTotal = setsTotal + oneTimeFeesTotal;
             
             const eventType = currentSelections.eventType.name;
             const eventTitle = eventType === "Special event" ? "Special event invitation" : `${eventType} invitation`;
@@ -691,11 +773,13 @@ ${currentSelections.inserts.value} insert${currentSelections.inserts.value !== 1
 ${currentSelections.paper.name} paper
 ${currentSelections.seal.name}`;
 
-            if (addonsSummary) quotationText += `\n\nAdd-ons:\n${addonsSummary}`;
-            if (layoutSummary) quotationText += `\n${layoutSummary}`;
-            if (rushSummary) quotationText += `\n${rushSummary}`;
-
-            quotationText += `\n${numberOfSets} sets x ₱${totalPerSet} each = ₱${finalTotal}`;
+            if (addonsSummary) quotationText += `\n${addonsSummary}`;
+            
+            quotationText += `\n${numberOfSets} sets x ₱${totalPerSet} each = ₱${setsTotal}`;
+            
+            if (oneTimeFeesText) quotationText += `\n\n${oneTimeFeesText}`;
+            
+            quotationText += `\nTotal: ₱${finalTotal}`;
             
             navigator.clipboard.writeText(quotationText).then(() => {
                 const notification = document.getElementById('notification');
