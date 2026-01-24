@@ -423,6 +423,7 @@
             { id: 'trifold-insert', name: 'Trifold insert', price: 10, unit: 'flat' },
             { id: 'liner', name: 'Liner', price: 20, unit: 'flat' },
             { id: 'arc-cut', name: 'Arc cut', price: 5, unit: 'page' },
+			{ id: 'decals', name: 'Decals', price: 15, unit: 'piece' },
             { id: 'gold-foil', name: 'Gold foil', price: 15, unit: 'page' },
             { id: 'silver-foil', name: 'Silver foil', price: 15, unit: 'page' },			
             { id: 'rosegold-foil', name: 'Rosegold foil', price: 15, unit: 'page' },			
@@ -865,6 +866,11 @@
                     oneTimeFeesHTML += `<div class="summary-line">${addon.name}: ₱${addon.price}</div>`;
                 }
             });
+			
+			// Add additional pages text if applicable - THIS GOES BEFORE SETS TOTAL
+            if (additionalPagesText) {
+                oneTimeFeesHTML += `<div class="summary-line">${additionalPagesText}</div>`;
+            }
             
             // Add layout fee to one-time fees if applicable - ALWAYS SHOW LAYOUT INFO
             if (layoutSummary) {
@@ -883,10 +889,6 @@
                 oneTimeFeesHTML += `<div class="summary-line">${rushSummary}</div>`;
             }
             
-            // Add additional pages text if applicable - THIS GOES BEFORE SETS TOTAL
-            if (additionalPagesText) {
-                oneTimeFeesHTML += `<div class="summary-line">${additionalPagesText}</div>`;
-            }
             
             const finalTotal = setsTotal + oneTimeFeesTotal;
             
@@ -1470,10 +1472,7 @@ if (currentSelections.discount && (currentSelections.paymentMethod === "direct-s
         oneTimeFeesText += `${rushSummary}\n`;
     }
     
-    // Add additional pages text if applicable
-    if (additionalPagesText) {
-        oneTimeFeesText += `${additionalPagesText}\n`;
-    }
+    
     
     const finalTotal = setsTotal + oneTimeFeesTotal;
     
@@ -1519,10 +1518,15 @@ if (currentSelections.discount && (currentSelections.paymentMethod === "direct-s
     quotationText += `${envelopeDisplay}\n`;
     quotationText += `${currentSelections.inserts.value} insert${currentSelections.inserts.value !== 1 ? 's' : ''}\n`;
     quotationText += `${currentSelections.paper.name} paper\n`;
-    quotationText += `${currentSelections.seal.name}`;
+    quotationText += `${currentSelections.seal.name}\n`;
     
     if (addonsSummary) {
-        quotationText += `\n${addonsSummary.trim()}`;
+        quotationText += `\n${addonsSummary}`;
+    }
+	
+	// Add additional pages text if applicable
+    if (additionalPagesText) {
+        quotationText += `${additionalPagesText}`;
     }
     
 	// Handle sets total
@@ -1606,16 +1610,8 @@ if (currentSelections.discount && (currentSelections.paymentMethod === "direct-s
         quotationText += `\n\nLocation: ${locationName}`;
     }
     
-    // Remove ALL extra line spaces - this is the key change
-    // Replace multiple consecutive newlines with just one newline
-    quotationText = quotationText.replace(/\n\n\n+/g, '');
     
-    // Also replace any triple newlines with double newlines
-    quotationText = quotationText.replace(/\n\n\n/g, '');
-    
-    // Trim any leading/trailing whitespace
-    quotationText = quotationText.trim();
-    
+   
     navigator.clipboard.writeText(quotationText).then(() => {
         const notification = document.getElementById('notification');
         notification.classList.add('show');
